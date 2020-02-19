@@ -83,11 +83,13 @@ public class FirestoreBatchSource extends ReferenceBatchSource<Object, QueryDocu
     new ImmutableMap.Builder<String, Schema>()
       .put(Boolean.class.getName(), Schema.of(Schema.Type.BOOLEAN))
       .put(Integer.class.getName(), Schema.of(Schema.Type.INT))
+      .put(Long.class.getName(), Schema.of(Schema.Type.LONG))
       .put(Double.class.getName(), Schema.of(Schema.Type.DOUBLE))
       .put(String.class.getName(), Schema.of(Schema.Type.STRING))
       .build();
 
     /*
+    com.google.firestore.v1.Value.ValueTypeCase
     REFERENCE_VALUE(5),
     GEO_POINT_VALUE(8),
     ARRAY_VALUE(9),

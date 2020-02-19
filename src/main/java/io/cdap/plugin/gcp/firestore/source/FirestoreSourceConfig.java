@@ -19,7 +19,6 @@ package io.cdap.plugin.gcp.firestore.source;
 import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import io.cdap.cdap.api.annotation.Description;
@@ -37,7 +36,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
@@ -88,7 +86,7 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
   @Name(PROPERTY_INCLUDE_ID)
   @Description("A flag to specify document id to be included in output")
   @Macro
-  private Boolean includeDocumentId;
+  private String includeDocumentId;
 
   @Name(PROPERTY_ID_ALIAS)
   @Description("Name of the field to set as the id field. This value is ignored if the `Include Document Id` is set to "
@@ -115,7 +113,7 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
     this.serviceFilePath = serviceFilePath;
     this.database = database;
     this.collection = collection;
-    this.includeDocumentId = includeDocumentId.equalsIgnoreCase("true");
+    this.includeDocumentId = includeDocumentId;
     this.idAlias = idAlias;
     this.numSplits = numSplits;
     this.schema = schema;
@@ -134,8 +132,8 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
     return collection;
   }
 
-  public Boolean isIncludeDocumentId() {
-    return includeDocumentId;
+  public boolean isIncludeDocumentId() {
+    return includeDocumentId != null && includeDocumentId.equalsIgnoreCase("true");
   }
 
   @Nullable
@@ -208,7 +206,7 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
       collector.addFailure("Invalid collection", null).withConfigProperty(PROPERTY_COLLECTION);
     }
 
-    throw collector.getOrThrowException();
+    collector.getOrThrowException();
   }
 
   private void validateSchema(Schema schema, FailureCollector collector) {
@@ -222,7 +220,7 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
   }
 
   /**
-   * Validates given field schema to be compliant with Datastore types.
+   * Validates given field schema to be compliant with Firestore types.
    *
    * @param fieldName   field name
    * @param fieldSchema schema for CDAP field
@@ -292,6 +290,7 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
    * @param supportedTypes        set of supported types.
    * @throws IllegalArgumentException in the case when schema is invalid.
    */
+  /*
   public void validateSchema(Schema schema, Set<Schema.LogicalType> supportedLogicalTypes,
                              Set<Schema.Type> supportedTypes) {
 
@@ -378,6 +377,7 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
     throw new IllegalArgumentException(String.format("Field '%s' is of unsupported type '%s'. " +
       "Supported types are: %s.", fieldName, actualTypeName, supportedTypeNames));
   }
+  */
 
   /**
    * Returns true if firestore can be connected to or schema is not a macro.

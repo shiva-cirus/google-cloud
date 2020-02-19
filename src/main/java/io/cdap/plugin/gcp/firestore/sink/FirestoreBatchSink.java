@@ -101,8 +101,7 @@ public class FirestoreBatchSink extends BatchSink<StructuredRecord, NullWritable
   public void initialize(BatchRuntimeContext context) throws Exception {
     super.initialize(context);
     FailureCollector collector = context.getFailureCollector();
-    this.recordToEntityTransformer = new RecordToEntityTransformer(config.getProject(),
-      config.getDatabase(), config.getIdType(collector), config.getIdAlias());
+    this.recordToEntityTransformer = new RecordToEntityTransformer(config.getIdType(collector), config.getIdAlias());
   }
 
   @Override

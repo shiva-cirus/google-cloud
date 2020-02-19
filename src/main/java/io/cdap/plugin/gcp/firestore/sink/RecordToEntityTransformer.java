@@ -16,6 +16,7 @@
 
 package io.cdap.plugin.gcp.firestore.sink;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.format.UnexpectedFormatException;
@@ -24,6 +25,7 @@ import io.cdap.plugin.gcp.firestore.sink.util.SinkIdType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,14 +40,10 @@ import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.ID_PROPERTY_N
  */
 public class RecordToEntityTransformer {
   private static final Logger LOG = LoggerFactory.getLogger(RecordToEntityTransformer.class);
-  private final String project;
-  private final String database;
   private final SinkIdType idType;
   private final String idAlias;
 
-  public RecordToEntityTransformer(String project, String database, SinkIdType idType, String idAlias) {
-    this.project = project;
-    this.database = database;
+  public RecordToEntityTransformer(SinkIdType idType, String idAlias) {
     this.idType = idType;
     this.idAlias = idAlias;
   }
@@ -58,20 +56,64 @@ public class RecordToEntityTransformer {
 
     for (Schema.Field field : fields) {
       String fieldName = field.getName();
-      String stringValue = convertToValue(fieldName, field.getSchema(), record);
-      LOG.error("fieldName: {}, fieldValue={}", fieldName, stringValue);
+      Object fieldValue = convertToValue(fieldName, field.getSchema(), record);
+      if (fieldValue == null) {
+        continue;
+      }
+
+      LOG.info("fieldName: {}, fieldValue={}", fieldName, fieldValue);
 
       if (idType == CUSTOM_NAME && fieldName.equals(idAlias)) {
-        data.put(ID_PROPERTY_NAME, stringValue);
+        data.put(ID_PROPERTY_NAME, fieldValue);
       } else {
-        data.put(fieldName, stringValue);
+        data.put(fieldName, fieldValue);
       }
     }
 
     return data;
   }
 
-  private String convertToValue(String fieldName, Schema fieldSchema, StructuredRecord record) {
+  private Object convertToValue(String fieldName, Schema fieldSchema, StructuredRecord record) {
+    if (record.get(fieldName) == null) {
+      return null;
+    }
+
+    Schema.LogicalType logicalType = fieldSchema.getLogicalType();
+    if (logicalType != null) {
+      switch (logicalType) {
+        case TIMESTAMP_MILLIS:
+        case TIMESTAMP_MICROS:
+          ZonedDateTime ts = getValue(record::getTimestamp, fieldName, logicalType.getToken(), ZonedDateTime.class);
+          Timestamp gcpTimestamp = Timestamp.ofTimeSecondsAndNanos(ts.toEpochSecond(), ts.getNano());
+          return gcpTimestamp;
+        default:
+          throw new IllegalStateException(
+            String.format("Record type '%s' is not supported for field '%s'", logicalType.getToken(), fieldName));
+      }
+    }
+
+    Schema.Type fieldType = fieldSchema.getType();
+    switch (fieldType) {
+      case STRING:
+        String stringValue = getValue(record::get, fieldName, fieldType.toString(), String.class);
+        return stringValue;
+      case INT:
+      case LONG:
+      case FLOAT:
+      case DOUBLE:
+        Number doubleValue = getValue(record::get, fieldName, fieldType.toString(), Number.class);
+        return doubleValue;
+      case BOOLEAN:
+        Boolean booleanValue = getValue(record::get, fieldName, fieldType.toString(), Boolean.class);
+        return booleanValue;
+      default:
+        throw new IllegalStateException(
+          String.format("Record type '%s' is not supported for field '%s'", fieldType.name(), fieldName));
+    }
+  }
+
+  /*
+  private String convertToValueOld(String fieldName, Schema fieldSchema, StructuredRecord record) {
     if (record.get(fieldName) == null) {
       return "";
     }
@@ -81,6 +123,7 @@ public class RecordToEntityTransformer {
 
     return stringValue;
   }
+  */
 
   private <T> T getValue(Function<String, T> valueExtractor, String fieldName, String fieldType, Class<T> clazz) {
     T value = valueExtractor.apply(fieldName);

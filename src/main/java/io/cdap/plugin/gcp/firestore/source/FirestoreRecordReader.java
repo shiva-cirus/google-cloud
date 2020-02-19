@@ -86,7 +86,7 @@ public class FirestoreRecordReader extends RecordReader<Object, QueryDocumentSna
 
   @Override
   public boolean nextKeyValue() throws IOException, InterruptedException {
-    if (!iterator.hasNext()) {
+    if (iterator == null || !iterator.hasNext()) {
       return false;
     }
     QueryDocumentSnapshot item = iterator.next();
