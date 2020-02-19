@@ -41,10 +41,6 @@ public enum SinkIdType {
     this.value = value;
   }
 
-  public String getValue() {
-    return value;
-  }
-
   /**
    * Converts id type string value into {@link SinkIdType} enum.
    *
@@ -59,5 +55,9 @@ public enum SinkIdType {
 
   public static String getSupportedTypes() {
     return Arrays.stream(SinkIdType.values()).map(SinkIdType::getValue).collect(Collectors.joining(", "));
+  }
+
+  public String getValue() {
+    return value;
   }
 }

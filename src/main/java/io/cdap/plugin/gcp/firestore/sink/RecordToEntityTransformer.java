@@ -20,7 +20,6 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.format.UnexpectedFormatException;
 import io.cdap.cdap.api.data.schema.Schema;
-import io.cdap.plugin.gcp.datastore.sink.util.SinkKeyType;
 import io.cdap.plugin.gcp.firestore.sink.util.SinkIdType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+
+import static io.cdap.plugin.gcp.firestore.sink.util.SinkIdType.CUSTOM_NAME;
+import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.ID_PROPERTY_NAME;
 
 /**
  * Transforms {@link StructuredRecord} to the Google Cloud Firestore {@link QueryDocumentSnapshot}.
@@ -58,7 +60,12 @@ public class RecordToEntityTransformer {
       String fieldName = field.getName();
       String stringValue = convertToValue(fieldName, field.getSchema(), record);
       LOG.error("fieldName: {}, fieldValue={}", fieldName, stringValue);
-      data.put(fieldName, stringValue);
+
+      if (idType == CUSTOM_NAME && fieldName.equals(idAlias)) {
+        data.put(ID_PROPERTY_NAME, stringValue);
+      } else {
+        data.put(fieldName, stringValue);
+      }
     }
 
     return data;

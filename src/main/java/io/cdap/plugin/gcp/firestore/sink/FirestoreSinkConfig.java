@@ -19,18 +19,13 @@ package io.cdap.plugin.gcp.firestore.sink;
 import com.google.cloud.firestore.Firestore;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
 import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.plugin.PluginConfig;
 import io.cdap.cdap.etl.api.FailureCollector;
-import io.cdap.plugin.common.IdUtils;
 import io.cdap.plugin.gcp.common.GCPReferenceSinkConfig;
-import io.cdap.plugin.gcp.datastore.sink.util.DatastoreSinkConstants;
-import io.cdap.plugin.gcp.datastore.sink.util.SinkKeyType;
-import io.cdap.plugin.gcp.datastore.util.DatastorePropertyUtil;
 import io.cdap.plugin.gcp.firestore.sink.util.SinkIdType;
 import io.cdap.plugin.gcp.firestore.util.FirestoreUtil;
 
@@ -41,7 +36,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
-import static io.cdap.plugin.common.Constants.Reference.REFERENCE_NAME;
 import static io.cdap.plugin.gcp.firestore.sink.util.FirestoreSinkConstants.MAX_BATCH_SIZE;
 import static io.cdap.plugin.gcp.firestore.sink.util.FirestoreSinkConstants.PROPERTY_BATCH_SIZE;
 import static io.cdap.plugin.gcp.firestore.sink.util.FirestoreSinkConstants.PROPERTY_ID_ALIAS;
@@ -340,7 +334,7 @@ public class FirestoreSinkConfig extends GCPReferenceSinkConfig {
    * If id type is not auto-generated, validates if id alias column is present in the schema
    * and its type is {@link Schema.Type#STRING}.
    *
-   * @param schema CDAP schema
+   * @param schema    CDAP schema
    * @param collector failure collector
    */
   private void validateIdType(Schema schema, FailureCollector collector) {
