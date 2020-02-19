@@ -20,6 +20,8 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 import io.cdap.cdap.api.data.format.StructuredRecord;
 import io.cdap.cdap.api.data.format.UnexpectedFormatException;
 import io.cdap.cdap.api.data.schema.Schema;
+import io.cdap.plugin.gcp.datastore.sink.util.SinkKeyType;
+import io.cdap.plugin.gcp.firestore.sink.util.SinkIdType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,10 +38,14 @@ public class RecordToEntityTransformer {
   private static final Logger LOG = LoggerFactory.getLogger(RecordToEntityTransformer.class);
   private final String project;
   private final String database;
+  private final SinkIdType idType;
+  private final String idAlias;
 
-  public RecordToEntityTransformer(String project, String database) {
+  public RecordToEntityTransformer(String project, String database, SinkIdType idType, String idAlias) {
     this.project = project;
     this.database = database;
+    this.idType = idType;
+    this.idAlias = idAlias;
   }
 
   public Map<String, Object> transformStructuredRecord(StructuredRecord record) {
@@ -50,7 +56,6 @@ public class RecordToEntityTransformer {
 
     for (Schema.Field field : fields) {
       String fieldName = field.getName();
-      LOG.error("fieldName: {}", fieldName);
       String stringValue = convertToValue(fieldName, field.getSchema(), record);
       LOG.error("fieldName: {}, fieldValue={}", fieldName, stringValue);
       data.put(fieldName, stringValue);

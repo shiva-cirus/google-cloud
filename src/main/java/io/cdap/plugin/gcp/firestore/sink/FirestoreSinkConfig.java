@@ -28,15 +28,25 @@ import io.cdap.cdap.api.plugin.PluginConfig;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.common.IdUtils;
 import io.cdap.plugin.gcp.common.GCPReferenceSinkConfig;
+import io.cdap.plugin.gcp.datastore.sink.util.DatastoreSinkConstants;
+import io.cdap.plugin.gcp.datastore.sink.util.SinkKeyType;
+import io.cdap.plugin.gcp.datastore.util.DatastorePropertyUtil;
+import io.cdap.plugin.gcp.firestore.sink.util.SinkIdType;
 import io.cdap.plugin.gcp.firestore.util.FirestoreUtil;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import static io.cdap.plugin.common.Constants.Reference.REFERENCE_NAME;
+import static io.cdap.plugin.gcp.firestore.sink.util.FirestoreSinkConstants.MAX_BATCH_SIZE;
+import static io.cdap.plugin.gcp.firestore.sink.util.FirestoreSinkConstants.PROPERTY_BATCH_SIZE;
+import static io.cdap.plugin.gcp.firestore.sink.util.FirestoreSinkConstants.PROPERTY_ID_ALIAS;
+import static io.cdap.plugin.gcp.firestore.sink.util.FirestoreSinkConstants.PROPERTY_ID_TYPE;
+import static io.cdap.plugin.gcp.firestore.sink.util.SinkIdType.AUTO_GENERATED_ID;
 import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_COLLECTION;
 import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_DATABASE_ID;
 
@@ -56,8 +66,29 @@ public class FirestoreSinkConfig extends GCPReferenceSinkConfig {
   @Macro
   private String collection;
 
+  @Name(PROPERTY_ID_TYPE)
+  @Macro
+  @Description("Type of id assigned to documents written to the Firestore. The type can be one of four values: "
+    + "`Auto-generated id` - id will be auto-generated as a String ID, `Custom name` - id "
+    + "will be provided as a field in the input records. The id field must not be nullable and must be "
+    + "of type STRING.")
+  private String idType;
+
+  @Name(PROPERTY_ID_ALIAS)
+  @Macro
+  @Nullable
+  @Description("The field that will be used as the document id when writing to Cloud Firestore. This must be provided "
+    + "when the Id Type is not auto generated.")
+  private String idAlias;
+
+  @Name(PROPERTY_BATCH_SIZE)
+  @Macro
+  @Description("Maximum number of documents that can be passed in one batch to a Commit operation. "
+    + "The minimum value is 1 and maximum value is 500")
+  private int batchSize;
+
   public FirestoreSinkConfig(String referenceName, String project, String serviceFilePath, String database,
-                             String collection) {
+                             String collection, String idType, String idAlias, int batchSize) {
     this.referenceName = referenceName;
     this.project = project;
     this.serviceFilePath = serviceFilePath;
@@ -78,100 +109,44 @@ public class FirestoreSinkConfig extends GCPReferenceSinkConfig {
     return collection;
   }
 
-    /*
-    public String getProject() {
-        String projectId = tryGetProject();
-        if (projectId == null) {
-            throw new IllegalArgumentException(
-                    "Could not detect Google Cloud project id from the environment. Please specify a project id.");
-        }
-        return projectId;
+  public SinkIdType getIdType(FailureCollector collector) {
+    Optional<SinkIdType> sinkIdType = SinkIdType.fromValue(idType);
+    if (sinkIdType.isPresent()) {
+      return sinkIdType.get();
     }
+    collector.addFailure("Unsupported id type value: " + idType,
+      String.format("Supported types are: %s", SinkIdType.getSupportedTypes()))
+      .withConfigProperty(PROPERTY_ID_TYPE);
+    throw collector.getOrThrowException();
+  }
 
-    @Nullable
-    public String tryGetProject() {
-        if (containsMacro(NAME_PROJECT) && Strings.isNullOrEmpty(project)) {
-            return null;
-        }
-        String projectId = project;
-        if (Strings.isNullOrEmpty(project) || AUTO_DETECT.equals(project)) {
-            projectId = ServiceOptions.getDefaultProjectId();
-        }
-        return projectId;
-    }
+  @Nullable
+  public String getIdAlias() {
+    return idAlias;
+  }
 
-    @Nullable
-    public String getServiceAccountFilePath() {
-        if (containsMacro(NAME_SERVICE_ACCOUNT_FILE_PATH) || serviceFilePath == null ||
-                serviceFilePath.isEmpty() || AUTO_DETECT.equals(serviceFilePath)) {
-            return null;
-        }
-        return serviceFilePath;
-    }
-    */
+  public int getBatchSize() {
+    return batchSize;
+  }
 
-  /**
-   * Return true if the service account is set to auto-detect but it can't be fetched from the environment.
-   * This shouldn't result in a deployment failure, as the credential could be detected at runtime if the pipeline
-   * runs on dataproc. This should primarily be used to check whether certain validation logic should be skipped.
-   *
-   * @return true if the service account is set to auto-detect but it can't be fetched from the environment.
-   */
-    /*
-    public boolean autoServiceAccountUnavailable() {
-        if (getServiceAccountFilePath() == null) {
-            try {
-                ServiceAccountCredentials.getApplicationDefault();
-            } catch (IOException e) {
-                return true;
-            }
-        }
-        return false;
-    }
-    */
+  public boolean shouldUseAutoGeneratedId(FailureCollector collector) {
+    return getIdType(collector) == AUTO_GENERATED_ID;
+  }
 
   /**
    * Validates {@link FirestoreSinkConfig} instance.
    */
   public void validate(@Nullable Schema schema, FailureCollector collector) {
-    //IdUtils.validateReferenceName(referenceName, collector);
     super.validate(collector);
 
-    if (Strings.isNullOrEmpty(referenceName)) {
-      collector.addFailure("Reference name must be specified", null)
-        .withConfigProperty(REFERENCE_NAME);
-    } else {
-      try {
-        IdUtils.validateId(referenceName);
-      } catch (IllegalArgumentException e) {
-        // InvalidConfigPropertyException should be thrown instead of IllegalArgumentException
-        collector.addFailure("Invalid reference name", null)
-          .withConfigProperty(REFERENCE_NAME)
-          .withStacktrace(e.getStackTrace());
-      }
-    }
-
+    validateBatchSize(collector);
     validateFirestoreConnection(collector);
+
     if (schema != null) {
       validateSchema(schema, collector);
+      validateIdType(schema, collector);
     }
   }
-    /*
-    public void validate() {
-        if (Strings.isNullOrEmpty(referenceName)) {
-            throw new InvalidConfigPropertyException("Reference name must be specified", REFERENCE_NAME);
-        } else {
-            try {
-                IdUtils.validateId(referenceName);
-            } catch (IllegalArgumentException e) {
-                // InvalidConfigPropertyException should be thrown instead of IllegalArgumentException
-                throw new InvalidConfigPropertyException("Invalid reference name", e, REFERENCE_NAME);
-            }
-        }
-
-        validateFirestoreConnection();
-    }
-    */
 
   @VisibleForTesting
   void validateFirestoreConnection(FailureCollector collector) {
@@ -187,8 +162,6 @@ public class FirestoreSinkConfig extends GCPReferenceSinkConfig {
         .withConfigProperty(NAME_SERVICE_ACCOUNT_FILE_PATH)
         .withConfigProperty(NAME_PROJECT)
         .withStacktrace(e.getStackTrace());
-      //throw new InvalidConfigPropertyException("Ensure properties like project, service account
-      // file path are correct.", e, NAME_PROJECT);
     }
   }
 
@@ -361,6 +334,48 @@ public class FirestoreSinkConfig extends GCPReferenceSinkConfig {
     String actualTypeName = logicalType != null ? logicalType.name().toLowerCase() : type.name().toLowerCase();
     throw new IllegalArgumentException(String.format("Field '%s' is of unsupported type '%s'. " +
       "Supported types are: %s.", fieldName, actualTypeName, supportedTypeNames));
+  }
+
+  /**
+   * If id type is not auto-generated, validates if id alias column is present in the schema
+   * and its type is {@link Schema.Type#STRING}.
+   *
+   * @param schema CDAP schema
+   * @param collector failure collector
+   */
+  private void validateIdType(Schema schema, FailureCollector collector) {
+    if (containsMacro(PROPERTY_ID_TYPE) || shouldUseAutoGeneratedId(collector)) {
+      return;
+    }
+
+    Schema.Field field = schema.getField(idAlias);
+    if (field == null) {
+      collector.addFailure(String.format("Id field '%s' does not exist in the schema", idAlias),
+        "Change the Id field to be one of the schema fields.")
+        .withConfigProperty(PROPERTY_ID_ALIAS);
+      return;
+    }
+
+    Schema fieldSchema = field.getSchema();
+    Schema.Type type = fieldSchema.getType();
+    if (Schema.Type.STRING != type) {
+      fieldSchema = fieldSchema.isNullable() ? fieldSchema.getNonNullable() : fieldSchema;
+      collector.addFailure(
+        String.format("Id field '%s' is of unsupported type '%s'", idAlias, fieldSchema.getDisplayName()),
+        "Ensure the type is non-nullable string")
+        .withConfigProperty(PROPERTY_ID_ALIAS).withInputSchemaField(idAlias);
+    }
+  }
+
+  private void validateBatchSize(FailureCollector collector) {
+    if (containsMacro(PROPERTY_BATCH_SIZE)) {
+      return;
+    }
+    if (batchSize < 1 || batchSize > MAX_BATCH_SIZE) {
+      collector.addFailure(String.format("Invalid Firestore batch size '%d'.", batchSize),
+        String.format("Ensure the batch size is at least 1 or at most '%d'", MAX_BATCH_SIZE))
+        .withConfigProperty(PROPERTY_BATCH_SIZE);
+    }
   }
 
   /**

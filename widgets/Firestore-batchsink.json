@@ -32,6 +32,26 @@
           "widget-type": "textbox",
           "label": "Collection",
           "name": "collection"
+        },
+        {
+          "widget-type": "select",
+          "label": "Document Id Type",
+          "name": "documentIdType",
+          "widget-attributes": {
+            "default": "Auto-generated id",
+            "values": [
+              "Auto-generated id",
+              "Custom name"
+            ]
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Document Id Alias",
+          "name": "idAlias",
+          "widget-attributes" : {
+            "placeholder": "Key alias"
+          }
         }
       ]
     },
@@ -44,6 +64,21 @@
           "name": "serviceFilePath",
           "widget-attributes" : {
             "default": "auto-detect"
+          }
+        }
+      ]
+    },
+    {
+      "label" : "Advanced",
+      "properties" : [
+        {
+          "widget-type": "number",
+          "label": "Batch Size",
+          "name": "batchSize",
+          "widget-attributes": {
+            "default": "25",
+            "min": "1",
+            "max": "500"
           }
         }
       ]

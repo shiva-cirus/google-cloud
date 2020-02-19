@@ -14,27 +14,30 @@
  * the License.
  */
 
-package io.cdap.plugin.gcp.firestore.util;
+package io.cdap.plugin.gcp.firestore.source.util;
 
 /**
  * Firestore constants.
  */
-public interface FirestoreConstants {
+public interface FirestoreSourceConstants {
 
   /**
-   * Firestore plugin name.
+   * Configuration property name used to specify if document id to be included in output
    */
-  String PLUGIN_NAME = "Firestore";
+  String PROPERTY_INCLUDE_ID = "includeDocumentId";
 
   /**
-   * Configuration property name used to specify Firestore database name.
+   * Configuration property name used to specify name document id column
    */
-  String PROPERTY_DATABASE_ID = "databaseId";
+  String PROPERTY_ID_ALIAS = "idAlias";
 
   /**
-   * Configuration property name used to specify name of the database collection.
+   * Configuration property name used to specify the schema of the documents.
    */
-  String PROPERTY_COLLECTION = "collection";
+  String PROPERTY_SCHEMA = "schema";
 
-  String ID_PROPERTY_NAME = "__id__";
+  /**
+   * Configuration property name used to specify the number of splits.
+   */
+  String PROPERTY_NUM_SPLITS = "numSplits";
 }

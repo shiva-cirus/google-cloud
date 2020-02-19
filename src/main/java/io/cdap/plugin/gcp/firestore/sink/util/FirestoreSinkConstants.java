@@ -14,27 +14,28 @@
  * the License.
  */
 
-package io.cdap.plugin.gcp.firestore.util;
+package io.cdap.plugin.gcp.firestore.sink.util;
 
 /**
- * Firestore constants.
+ * Firestore Sink constants.
  */
-public interface FirestoreConstants {
+public interface FirestoreSinkConstants {
 
   /**
-   * Firestore plugin name.
+   * Configuration property name used to specify the type of document id
    */
-  String PLUGIN_NAME = "Firestore";
+  String PROPERTY_ID_TYPE = "documentIdType";
 
   /**
-   * Configuration property name used to specify Firestore database name.
+   * Configuration property name used to specify column name to be used as document id
    */
-  String PROPERTY_DATABASE_ID = "databaseId";
+  String PROPERTY_ID_ALIAS = "idAlias";
 
   /**
-   * Configuration property name used to specify name of the database collection.
+   * Configuration property name used to specify the batch size.
    */
-  String PROPERTY_COLLECTION = "collection";
+  String PROPERTY_BATCH_SIZE = "batchSize";
 
-  String ID_PROPERTY_NAME = "__id__";
+  // Maximum number of entities that can be passed to a Commit operation in the Cloud Datastore API
+  int MAX_BATCH_SIZE = 500;
 }

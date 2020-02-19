@@ -25,9 +25,9 @@ import java.util.Objects;
 
 import static io.cdap.plugin.gcp.common.GCPConfig.NAME_PROJECT;
 import static io.cdap.plugin.gcp.common.GCPConfig.NAME_SERVICE_ACCOUNT_FILE_PATH;
+import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_NUM_SPLITS;
 import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_COLLECTION;
 import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_DATABASE_ID;
-import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_NUM_SPLITS;
 
 /**
  * Provides FirestoreInputFormat class name and configuration.

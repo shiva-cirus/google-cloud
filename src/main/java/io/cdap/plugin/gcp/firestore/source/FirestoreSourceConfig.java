@@ -41,12 +41,12 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
+import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_ID_ALIAS;
+import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_INCLUDE_ID;
+import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_NUM_SPLITS;
+import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_SCHEMA;
 import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_COLLECTION;
 import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_DATABASE_ID;
-import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_ID_ALIAS;
-import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_INCLUDE_ID;
-import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_NUM_SPLITS;
-import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_SCHEMA;
 
 /**
  * Defines a base {@link PluginConfig} that Firestore Source and Sink can re-use.

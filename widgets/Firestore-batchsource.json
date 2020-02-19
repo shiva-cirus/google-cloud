@@ -44,27 +44,6 @@
           }
         },
         {
-          "widget-type": "select",
-          "label": "Include Document Id",
-          "name": "includeDocumentId",
-          "widget-attributes": {
-            "values": [
-              "true",
-              "false"
-            ],
-            "default": "true"
-          }
-        },
-        {
-          "widget-type": "textbox",
-          "label": "Document Id Alias",
-          "name": "idAlias",
-          "widget-attributes" : {
-            "placeholder": "Name used to identify user-friendly document id",
-            "default": "__id__"
-          }
-        },
-        {
           "widget-type": "number",
           "label": "Number of Splits",
           "name": "numSplits",
@@ -85,6 +64,32 @@
           "name": "serviceFilePath",
           "widget-attributes" : {
             "default": "auto-detect"
+          }
+        }
+      ]
+    },
+    {
+      "label": "Advanced",
+      "properties": [
+        {
+          "widget-type": "select",
+          "label": "Include Document Id",
+          "name": "includeDocumentId",
+          "widget-attributes": {
+            "values": [
+              "true",
+              "false"
+            ],
+            "default": "false"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Document Id Alias",
+          "name": "idAlias",
+          "widget-attributes" : {
+            "placeholder": "Name used to identify user-friendly document id",
+            "default": "__id__"
           }
         }
       ]
