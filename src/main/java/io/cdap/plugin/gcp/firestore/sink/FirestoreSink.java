@@ -42,19 +42,19 @@ import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PLUGIN_NAME;
 
 /**
  * A {@link BatchSink} that writes data to Cloud Firestore.
- * This {@link FirestoreBatchSink} takes a {@link StructuredRecord} in, converts it to document, and writes it to the
+ * This {@link FirestoreSink} takes a {@link StructuredRecord} in, converts it to document, and writes it to the
  * Cloud Firestore collection.
  */
 @Plugin(type = BatchSink.PLUGIN_TYPE)
 @Name(PLUGIN_NAME)
 @Description("CDAP Google Cloud Firestore Batch Sink takes the structured record from the input source and writes "
   + "to Google Cloud Firestore.")
-public class FirestoreBatchSink extends BatchSink<StructuredRecord, NullWritable, Map<String, Object>> {
-  private static final Logger LOG = LoggerFactory.getLogger(FirestoreBatchSink.class);
+public class FirestoreSink extends BatchSink<StructuredRecord, NullWritable, Map<String, Object>> {
+  private static final Logger LOG = LoggerFactory.getLogger(FirestoreSink.class);
   private final FirestoreSinkConfig config;
   private RecordToEntityTransformer recordToEntityTransformer;
 
-  public FirestoreBatchSink(FirestoreSinkConfig config) {
+  public FirestoreSink(FirestoreSinkConfig config) {
     this.config = config;
   }
 

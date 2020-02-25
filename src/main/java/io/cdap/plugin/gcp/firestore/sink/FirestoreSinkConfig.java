@@ -19,6 +19,7 @@ package io.cdap.plugin.gcp.firestore.sink;
 import com.google.cloud.firestore.Firestore;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
@@ -41,6 +42,7 @@ import static io.cdap.plugin.gcp.firestore.sink.util.FirestoreSinkConstants.PROP
 import static io.cdap.plugin.gcp.firestore.sink.util.FirestoreSinkConstants.PROPERTY_ID_ALIAS;
 import static io.cdap.plugin.gcp.firestore.sink.util.FirestoreSinkConstants.PROPERTY_ID_TYPE;
 import static io.cdap.plugin.gcp.firestore.sink.util.SinkIdType.AUTO_GENERATED_ID;
+import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.ID_PROPERTY_NAME;
 import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_COLLECTION;
 import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_DATABASE_ID;
 
@@ -56,14 +58,15 @@ public class FirestoreSinkConfig extends GCPReferenceSinkConfig {
   private String database;
 
   @Name(PROPERTY_COLLECTION)
-  @Description("Name of the database collection.")
+  @Description("Name of the database collection. If the collection name does not exist in Firestore " +
+    "then it will create a new collection and then the data will be written to it.")
   @Macro
   private String collection;
 
   @Name(PROPERTY_ID_TYPE)
   @Macro
-  @Description("Type of id assigned to documents written to the Firestore. The type can be one of four values: "
-    + "`Auto-generated id` - id will be auto-generated as a String ID, `Custom name` - id "
+  @Description("Type of id assigned to documents written to the Firestore. The type can be one of two values: "
+    + "`Auto-generated id` - id will be auto-generated as a Alpha-numeric ID, `Custom name` - id "
     + "will be provided as a field in the input records. The id field must not be nullable and must be "
     + "of type STRING.")
   private String idType;
@@ -81,6 +84,11 @@ public class FirestoreSinkConfig extends GCPReferenceSinkConfig {
     + "The minimum value is 1 and maximum value is 500")
   private int batchSize;
 
+  public FirestoreSinkConfig() {
+    // needed for initialization
+  }
+
+  @VisibleForTesting
   public FirestoreSinkConfig(String referenceName, String project, String serviceFilePath, String database,
                              String collection, String idType, String idAlias, int batchSize) {
     this.referenceName = referenceName;
@@ -88,6 +96,9 @@ public class FirestoreSinkConfig extends GCPReferenceSinkConfig {
     this.serviceFilePath = serviceFilePath;
     this.database = database;
     this.collection = collection;
+    this.idType = idType;
+    this.idAlias = idAlias;
+    this.batchSize = batchSize;
   }
 
   public String getReferenceName() {
@@ -116,7 +127,7 @@ public class FirestoreSinkConfig extends GCPReferenceSinkConfig {
 
   @Nullable
   public String getIdAlias() {
-    return idAlias;
+    return Strings.isNullOrEmpty(idAlias) ? ID_PROPERTY_NAME : idAlias;
   }
 
   public int getBatchSize() {

@@ -17,19 +17,6 @@
         },
         {
           "widget-type": "textbox",
-          "label": "Project ID",
-          "name": "project",
-          "widget-attributes" : {
-            "default": "auto-detect"
-          }
-        },
-        {
-          "widget-type": "textbox",
-          "label": "Database Id",
-          "name": "databaseId"
-        },
-        {
-          "widget-type": "textbox",
           "label": "Collection",
           "name": "collection"
         },
@@ -65,6 +52,19 @@
           "widget-attributes" : {
             "default": "auto-detect"
           }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Project ID",
+          "name": "project",
+          "widget-attributes" : {
+            "default": "auto-detect"
+          }
+        },
+        {
+          "widget-type": "textbox",
+          "label": "Database Id",
+          "name": "databaseId"
         }
       ]
     },

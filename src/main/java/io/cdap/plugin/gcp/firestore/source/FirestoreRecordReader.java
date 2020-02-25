@@ -18,8 +18,14 @@ package io.cdap.plugin.gcp.firestore.source;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import io.cdap.plugin.gcp.firestore.source.util.FilterInfo;
+import io.cdap.plugin.gcp.firestore.source.util.FilterInfoParser;
+import io.cdap.plugin.gcp.firestore.source.util.FirestoreQueryBuilder;
 import io.cdap.plugin.gcp.firestore.util.FirestoreUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
@@ -30,12 +36,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static io.cdap.plugin.gcp.common.GCPConfig.NAME_PROJECT;
 import static io.cdap.plugin.gcp.common.GCPConfig.NAME_SERVICE_ACCOUNT_FILE_PATH;
+import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_CUSTOME_QUERY;
+import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_PULL_DOCUMENTS;
+import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_SCHEMA;
+import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_SKIP_DOCUMENTS;
 import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_COLLECTION;
 import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_DATABASE_ID;
 
@@ -57,21 +69,69 @@ public class FirestoreRecordReader extends RecordReader<Object, QueryDocumentSna
   @Override
   public void initialize(InputSplit inputSplit, TaskAttemptContext taskAttemptContext)
     throws IOException, InterruptedException {
+
     conf = taskAttemptContext.getConfiguration();
     String projectId = conf.get(NAME_PROJECT);
     String databaseId = conf.get(PROPERTY_DATABASE_ID);
     String serviceAccountFilePath = conf.get(NAME_SERVICE_ACCOUNT_FILE_PATH);
     String collection = conf.get(PROPERTY_COLLECTION);
+    List<String> fields = splitToList(conf.get(PROPERTY_SCHEMA, ""), ',');
+    List<String> pullDocuments = splitToList(conf.get(PROPERTY_PULL_DOCUMENTS, ""), ',');
+    List<String> skipDocuments = splitToList(conf.get(PROPERTY_SKIP_DOCUMENTS, ""), ',');
+    String customQuery = conf.get(PROPERTY_CUSTOME_QUERY, "");
 
     LOG.info("Inside Reader.initialize");
 
     db = FirestoreUtil.getFirestore(serviceAccountFilePath, projectId, databaseId);
 
     try {
-      LOG.info("Get documents");
-      ApiFuture<QuerySnapshot> query = db.collection(collection).get();
-      QuerySnapshot querySnapshot = query.get();
-      items = querySnapshot.getDocuments();
+      LOG.info("Get documents...");
+
+      /*
+      Query query = db.collection(collection);
+      if (fields.length > 0) {
+        query = query.select(fields);
+      }
+      if (splitLength > 0) {
+        query = query.offset(splitStart).limit(splitLength);
+      }
+      */
+
+      List<FilterInfo> filters = getParsedFilters(customQuery);
+      Query query = FirestoreQueryBuilder.buildQuery(db, collection, fields, inputSplit, filters);
+      ApiFuture<QuerySnapshot> futureSnapshot = query.get();
+
+      /*
+      CollectionReference colRef = db.collection(collection);
+      ApiFuture<QuerySnapshot> query = null;
+
+      if (fields.length == 0) {
+        if (start == 0 && end == 0) {
+          query = colRef.get();
+        } else {
+          query = colRef.offset(start).limit(length).get();
+        }
+      } else {
+        if (start == 0 && end == 0) {
+          query = colRef.select(fields).get();
+        } else {
+          query = colRef.select(fields).offset(start).limit(length).get();
+        }
+      }
+      */
+
+      QuerySnapshot querySnapshot = futureSnapshot.get();
+      List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
+
+      if (!pullDocuments.isEmpty()) {
+        documents = documents.stream().filter(o -> pullDocuments.contains(o.getId())).collect(Collectors.toList());
+      }
+
+      if (!skipDocuments.isEmpty()) {
+        documents = documents.stream().filter(o -> !skipDocuments.contains(o.getId())).collect(Collectors.toList());
+      }
+
+      items = documents;
 
       LOG.info("documents={}", items.size());
 
@@ -114,5 +174,23 @@ public class FirestoreRecordReader extends RecordReader<Object, QueryDocumentSna
   @Override
   public void close() throws IOException {
     //db.close();
+  }
+
+  private List<FilterInfo> getParsedFilters(String filterString) {
+    List<FilterInfo> filters = Collections.emptyList();
+    try {
+      filters = FilterInfoParser.parseFilterString(filterString);
+    } catch (Exception e) {
+      LOG.warn("Failed while parsing the filter string", e);
+    }
+    return filters;
+  }
+
+  private List<String> splitToList(String value, char delimiter) {
+    if (Strings.isNullOrEmpty(value)) {
+      return Collections.emptyList();
+    }
+
+    return Splitter.on(delimiter).trimResults().splitToList(value);
   }
 }

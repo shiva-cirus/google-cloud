@@ -31,8 +31,33 @@ When running on other clusters, the file must be present on every node in the cl
 
 **Collection Name**: Name of the collection to read the data from.
 
-**Number of Splits**: Desired number of splits to divide the query into when reading from Cloud Firestore. 
-Fewer splits may be created if the query cannot be divided into the desired number of splits.
+**Mode**: Mode of query. The mode can be one of two values: 
+
+`Basic` - will allow user to specify documents to pull or skip.  
+
+`Advanced` - will allow user to specify custom query.
+
+**Documents to pull**: Specify the document ids to be extracted from Firestore Collection; for example: `'Doc1,Doc2'`. 
+Note, This applies only if Mode is set to `Basic`.  
+
+**Documents to skip**: Specify the document ids to be skipped from Firestore Collection; for example: `'Doc1,Doc2'`. 
+Note, This applies only if Mode is set to `Basic`.  
+
+**Filters**: Specify the custom filter for fetching documents from Firestore Collection. Supported operators are, 
+* EqualTo
+* LessThan
+* LessThanOrEqualTo
+* GreaterThan
+* GreaterThanOrEqualTo
+
+A filter must specify the operator with field it should filter on as well the value.
+Filters are specified using syntax: `value:operator(field)[,value:operator(field)]`.
+
+For example, `CA:EqualTo(state),1000000:LessThan(population)` will apply two filters.
+The first will create a filter as `state = 'CA'`.
+The second will create a filter as `population < 1000000`.
+  
+Note, This applies only if Mode is set to `Advanced`.  
 
 **Include Document Id**: This decides whether to include document id in the output or not. This can have one two values:
 

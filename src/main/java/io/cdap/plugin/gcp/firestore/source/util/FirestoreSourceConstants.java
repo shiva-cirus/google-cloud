@@ -17,7 +17,7 @@
 package io.cdap.plugin.gcp.firestore.source.util;
 
 /**
- * Firestore constants.
+ * Firestore Source constants.
  */
 public interface FirestoreSourceConstants {
 
@@ -39,5 +39,25 @@ public interface FirestoreSourceConstants {
   /**
    * Configuration property name used to specify the number of splits.
    */
-  String PROPERTY_NUM_SPLITS = "numSplits";
+  //String PROPERTY_NUM_SPLITS = "numSplits";
+
+  /**
+   * Configuration property name used to specify the query mode.
+   */
+  String PROPERTY_QUERY_MODE = "queryMode";
+
+  /**
+   * Configuration property name used to specify the comma-separated list of document ids to pull.
+   */
+  String PROPERTY_PULL_DOCUMENTS = "pullDocumentList";
+
+  /**
+   * Configuration property name used to specify the comma-separated list of document ids to skip.
+   */
+  String PROPERTY_SKIP_DOCUMENTS = "skipDocumentList";
+
+  /**
+   * Configuration property name used to specify the comma-separated list of document ids to pull.
+   */
+  String PROPERTY_CUSTOME_QUERY = "customQuery";
 }

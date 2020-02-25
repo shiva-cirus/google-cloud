@@ -27,19 +27,40 @@ import java.io.IOException;
  * Firestore input split
  */
 public class FirestoreInputSplit extends InputSplit implements Writable {
+  private long start = 0L;
+  private long end = 0L;
+
+  public FirestoreInputSplit() {
+  }
+
+  public FirestoreInputSplit(long start, long end) {
+    this.start = start;
+    this.end = end;
+  }
+
+  public long getStart() {
+    return start;
+  }
+
+  public long getEnd() {
+    return end;
+  }
+
   @Override
   public void write(DataOutput dataOutput) throws IOException {
-
+    dataOutput.writeLong(this.start);
+    dataOutput.writeLong(this.end);
   }
 
   @Override
   public void readFields(DataInput dataInput) throws IOException {
-
+    this.start = dataInput.readLong();
+    this.end = dataInput.readLong();
   }
 
   @Override
   public long getLength() throws IOException, InterruptedException {
-    return 0;
+    return this.end - this.start;
   }
 
   @Override

@@ -13,18 +13,18 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
-package io.cdap.plugin.gcp.firestore.source;
+package io.cdap.plugin.gcp.firestore.sink;
 
 /**
- * Utility class that provides handy methods to construct Firestore Source Config for testing
+ * Utility class that provides handy methods to construct Firestore Sink Config for testing
  */
-public class FirestoreSourceConfigHelper {
+public class FirestoreSinkConfigHelper {
 
   public static final String TEST_REF_NAME = "TestRefName";
   public static final String TEST_PROJECT = "test-project";
   public static final String TEST_DATABASE = "TestDatabase";
   public static final String TEST_COLLECTION = "TestCollection";
+  public static final String TEST_ID_ALIAS = "testIdAlias";
 
   public static ConfigBuilder newConfigBuilder() {
     return new ConfigBuilder();
@@ -36,9 +36,9 @@ public class FirestoreSourceConfigHelper {
     private String serviceFilePath = "/path/to/file";
     private String database = TEST_DATABASE;
     private String collection = TEST_COLLECTION;
-    private String includeDocumentId = "true";
-    private String idAlias = "__id__";
-    private String schema;
+    private String idType;
+    private String idAlias;
+    private int batchSize;
 
     public ConfigBuilder setReferenceName(String referenceName) {
       this.referenceName = referenceName;
@@ -65,8 +65,8 @@ public class FirestoreSourceConfigHelper {
       return this;
     }
 
-    public ConfigBuilder setIncludeDocumentId(String includeDocumentId) {
-      this.includeDocumentId = includeDocumentId;
+    public ConfigBuilder setIdType(String idType) {
+      this.idType = idType;
       return this;
     }
 
@@ -75,16 +75,14 @@ public class FirestoreSourceConfigHelper {
       return this;
     }
 
-    public ConfigBuilder setSchema(String schema) {
-      this.schema = schema;
+    public ConfigBuilder setBatchSize(int batchSize) {
+      this.batchSize = batchSize;
       return this;
     }
 
-    public FirestoreSourceConfig build() {
-      return new FirestoreSourceConfig(referenceName, project, serviceFilePath, database, collection,
-        "Basic", "", "", "", includeDocumentId, idAlias, schema);
+    public FirestoreSinkConfig build() {
+      return new FirestoreSinkConfig(referenceName, project, serviceFilePath, database, collection, idType, idAlias,
+        batchSize);
     }
-
   }
-
 }

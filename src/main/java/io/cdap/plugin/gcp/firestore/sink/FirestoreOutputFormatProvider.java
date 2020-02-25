@@ -37,7 +37,7 @@ public class FirestoreOutputFormatProvider implements OutputFormatProvider {
   private final Map<String, String> configMap;
 
   /**
-   * Gets properties from {@link FirestoreBatchSink} and stores them as properties in map
+   * Gets properties from {@link FirestoreSink} and stores them as properties in map
    * for {@link FirestoreRecordWriter}.
    *
    * @param project                  firestore project

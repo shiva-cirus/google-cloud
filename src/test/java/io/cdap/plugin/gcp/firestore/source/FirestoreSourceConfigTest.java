@@ -16,19 +16,16 @@
 
 package io.cdap.plugin.gcp.firestore.source;
 
-import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.cdap.etl.api.validation.CauseAttributes;
 import io.cdap.cdap.etl.mock.validation.MockFailureCollector;
-import io.cdap.plugin.gcp.datastore.source.DatastoreSourceConfig;
-import io.cdap.plugin.gcp.datastore.source.DatastoreSourceConfigHelper;
-import io.cdap.plugin.gcp.datastore.source.util.DatastoreSourceConstants;
-import io.cdap.plugin.gcp.datastore.source.util.SourceKeyType;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
+
+import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_COLLECTION;
 
 /**
  * Tests for {@link FirestoreSourceConfig}.
@@ -39,36 +36,61 @@ public class FirestoreSourceConfigTest {
   public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void testValidateConfigNumSplitsInvalid() {
-    Schema schema = Schema.recordOf("record",
-      Schema.Field.of("id", Schema.of(Schema.Type.LONG)),
-      Schema.Field.of("name", Schema.of(Schema.Type.STRING)));
-
+  public void testValidateCollectionNull() {
     MockFailureCollector collector = new MockFailureCollector();
     FirestoreSourceConfig config = withFirestoreValidationMock(FirestoreSourceConfigHelper.newConfigBuilder()
-      .setSchema(schema.toString())
-      .setNumSplits(0)
+      .setCollection(null)
       .build(), collector);
 
     config.validate(collector);
     Assert.assertEquals(1, collector.getValidationFailures().size());
-    Assert.assertEquals(DatastoreSourceConstants.PROPERTY_NUM_SPLITS, collector.getValidationFailures().get(0)
+    Assert.assertEquals(PROPERTY_COLLECTION, collector.getValidationFailures().get(0)
       .getCauses().get(0).getAttribute(CauseAttributes.STAGE_CONFIG));
   }
 
   @Test
-  public void testValidateConfigNumSplitsValid() {
-    Schema schema = Schema.recordOf("record",
-      Schema.Field.of("id", Schema.of(Schema.Type.LONG)),
-      Schema.Field.of("name", Schema.of(Schema.Type.STRING)));
-
+  public void testValidateCollectionEmpty() {
     MockFailureCollector collector = new MockFailureCollector();
     FirestoreSourceConfig config = withFirestoreValidationMock(FirestoreSourceConfigHelper.newConfigBuilder()
-      .setSchema(schema.toString())
-      .setNumSplits(1)
+      .setCollection("")
       .build(), collector);
 
     config.validate(collector);
+    Assert.assertEquals(1, collector.getValidationFailures().size());
+    Assert.assertEquals(PROPERTY_COLLECTION, collector.getValidationFailures().get(0)
+      .getCauses().get(0).getAttribute(CauseAttributes.STAGE_CONFIG));
+  }
+
+  @Test
+  public void testIsIncludeDocumentIdTrue() {
+    FirestoreSourceConfig config = FirestoreSourceConfigHelper.newConfigBuilder()
+      .setIncludeDocumentId("true")
+      .build();
+
+    MockFailureCollector collector = new MockFailureCollector();
+    Assert.assertTrue(config.isIncludeDocumentId());
+    Assert.assertEquals(0, collector.getValidationFailures().size());
+  }
+
+  @Test
+  public void testIsIncludeDocumentIdFalse() {
+    FirestoreSourceConfig config = FirestoreSourceConfigHelper.newConfigBuilder()
+      .setIncludeDocumentId("false")
+      .build();
+
+    MockFailureCollector collector = new MockFailureCollector();
+    Assert.assertFalse(config.isIncludeDocumentId());
+    Assert.assertEquals(0, collector.getValidationFailures().size());
+  }
+
+  @Test
+  public void testIsIncludeDocumentIdInvalid() {
+    FirestoreSourceConfig config = FirestoreSourceConfigHelper.newConfigBuilder()
+      .setIncludeDocumentId("invalid")
+      .build();
+
+    MockFailureCollector collector = new MockFailureCollector();
+    Assert.assertFalse(config.isIncludeDocumentId());
     Assert.assertEquals(0, collector.getValidationFailures().size());
   }
 

@@ -37,8 +37,6 @@ import io.cdap.cdap.etl.api.batch.BatchRuntimeContext;
 import io.cdap.cdap.etl.api.batch.BatchSource;
 import io.cdap.cdap.etl.api.batch.BatchSourceContext;
 import io.cdap.plugin.common.LineageRecorder;
-import io.cdap.plugin.common.ReferenceBatchSource;
-import io.cdap.plugin.common.ReferencePluginConfig;
 import io.cdap.plugin.gcp.firestore.exception.FirestoreInitializationException;
 import io.cdap.plugin.gcp.firestore.util.FirestoreUtil;
 import org.slf4j.Logger;
@@ -51,6 +49,7 @@ import java.util.stream.Collectors;
 
 import static io.cdap.plugin.gcp.common.GCPConfig.NAME_PROJECT;
 import static io.cdap.plugin.gcp.common.GCPConfig.NAME_SERVICE_ACCOUNT_FILE_PATH;
+import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.ID_PROPERTY_NAME;
 import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PLUGIN_NAME;
 import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_COLLECTION;
 
@@ -62,9 +61,9 @@ import static io.cdap.plugin.gcp.firestore.util.FirestoreConstants.PROPERTY_COLL
 @Name(PLUGIN_NAME)
 @Description("Firestore Batch Source will read documents from Firestore and convert each document " +
   "into a StructuredRecord with the help of the specified Schema. ")
-public class FirestoreBatchSource extends ReferenceBatchSource<Object, QueryDocumentSnapshot, StructuredRecord> {
+public class FirestoreSource extends BatchSource<Object, QueryDocumentSnapshot, StructuredRecord> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(FirestoreBatchSource.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FirestoreSource.class);
 
     /*
     private static final Map<Value.ValueTypeCase, Schema> SUPPORTED_SIMPLE_TYPES1 =
@@ -100,8 +99,7 @@ public class FirestoreBatchSource extends ReferenceBatchSource<Object, QueryDocu
   private final FirestoreSourceConfig config;
   private QueryDocumentSnapshotToRecordTransformer queryDocumentSnapshotToRecordTransformer;
 
-  public FirestoreBatchSource(FirestoreSourceConfig config) {
-    super(new ReferencePluginConfig(config.getReferenceName()));
+  public FirestoreSource(FirestoreSourceConfig config) {
     this.config = config;
   }
 
@@ -143,10 +141,16 @@ public class FirestoreBatchSource extends ReferenceBatchSource<Object, QueryDocu
     String serviceAccountFile = config.getServiceAccountFilePath();
     String database = config.getDatabase();
     String collection = config.getCollection();
-    String splits = String.valueOf(config.getNumSplits());
+    //String splits = String.valueOf(config.getNumSplits());
+    String mode = config.getQueryMode(collector).getValue();
+    String pullDocuments = config.getPullDocuments();
+    String skipDocuments = config.getPullDocuments();
+    String filters = config.getFilters();
+
+    List<String> fields = fetchSchemaFields(config.getSchema(collector));
 
     context.setInput(Input.of(config.getReferenceName(), new FirestoreInputFormatProvider(project, serviceAccountFile,
-      database, collection, splits)));
+      database, collection, mode, pullDocuments, skipDocuments, filters, fields)));
 
     emitLineage(context);
   }
@@ -170,6 +174,13 @@ public class FirestoreBatchSource extends ReferenceBatchSource<Object, QueryDocu
     }
   }
 
+  private List<String> fetchSchemaFields(Schema schema) {
+    return schema.getFields().stream()
+      .filter(f -> !f.getName().equals(ID_PROPERTY_NAME))
+      .map(Schema.Field::getName)
+      .collect(Collectors.toList());
+  }
+
   private void emitLineage(BatchSourceContext context) {
     FailureCollector collector = context.getFailureCollector();
     LineageRecorder lineageRecorder = new LineageRecorder(context, config.getReferenceName());
@@ -189,7 +200,6 @@ public class FirestoreBatchSource extends ReferenceBatchSource<Object, QueryDocu
     try {
       Firestore db = FirestoreUtil.getFirestore(config.getServiceAccountFilePath(), config.getProject(),
         config.getDatabase());
-      config.validateCollection(db, collector);
       ApiFuture<QuerySnapshot> query = db.collection(config.getCollection()).limit(1).get();
       QuerySnapshot querySnapshot = query.get();
 
