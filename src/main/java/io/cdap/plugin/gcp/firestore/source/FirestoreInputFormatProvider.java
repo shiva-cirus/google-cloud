@@ -27,7 +27,7 @@ import java.util.Objects;
 
 import static io.cdap.plugin.gcp.common.GCPConfig.NAME_PROJECT;
 import static io.cdap.plugin.gcp.common.GCPConfig.NAME_SERVICE_ACCOUNT_FILE_PATH;
-import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_CUSTOME_QUERY;
+import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_CUSTOM_QUERY;
 import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_PULL_DOCUMENTS;
 import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_QUERY_MODE;
 import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_SCHEMA;
@@ -52,7 +52,7 @@ public class FirestoreInputFormatProvider implements InputFormatProvider {
       .put(PROPERTY_QUERY_MODE, mode)
       .put(PROPERTY_PULL_DOCUMENTS, Strings.isNullOrEmpty(pullDocuments) ? "" : pullDocuments)
       .put(PROPERTY_SKIP_DOCUMENTS, Strings.isNullOrEmpty(skipDocuments) ? "" : skipDocuments)
-      .put(PROPERTY_CUSTOME_QUERY, Strings.isNullOrEmpty(filters) ? "" : filters)
+      .put(PROPERTY_CUSTOM_QUERY, Strings.isNullOrEmpty(filters) ? "" : filters)
       .put(PROPERTY_SCHEMA, Joiner.on(",").join(fields));
     if (Objects.nonNull(serviceAccountPath)) {
       builder.put(NAME_SERVICE_ACCOUNT_FILE_PATH, serviceAccountPath);

@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 
 import static io.cdap.plugin.gcp.common.GCPConfig.NAME_PROJECT;
 import static io.cdap.plugin.gcp.common.GCPConfig.NAME_SERVICE_ACCOUNT_FILE_PATH;
-import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_CUSTOME_QUERY;
+import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_CUSTOM_QUERY;
 import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_PULL_DOCUMENTS;
 import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_SCHEMA;
 import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_SKIP_DOCUMENTS;
@@ -78,47 +78,14 @@ public class FirestoreRecordReader extends RecordReader<Object, QueryDocumentSna
     List<String> fields = splitToList(conf.get(PROPERTY_SCHEMA, ""), ',');
     List<String> pullDocuments = splitToList(conf.get(PROPERTY_PULL_DOCUMENTS, ""), ',');
     List<String> skipDocuments = splitToList(conf.get(PROPERTY_SKIP_DOCUMENTS, ""), ',');
-    String customQuery = conf.get(PROPERTY_CUSTOME_QUERY, "");
-
-    LOG.info("Inside Reader.initialize");
+    String customQuery = conf.get(PROPERTY_CUSTOM_QUERY, "");
 
     db = FirestoreUtil.getFirestore(serviceAccountFilePath, projectId, databaseId);
 
     try {
-      LOG.info("Get documents...");
-
-      /*
-      Query query = db.collection(collection);
-      if (fields.length > 0) {
-        query = query.select(fields);
-      }
-      if (splitLength > 0) {
-        query = query.offset(splitStart).limit(splitLength);
-      }
-      */
-
       List<FilterInfo> filters = getParsedFilters(customQuery);
       Query query = FirestoreQueryBuilder.buildQuery(db, collection, fields, inputSplit, filters);
       ApiFuture<QuerySnapshot> futureSnapshot = query.get();
-
-      /*
-      CollectionReference colRef = db.collection(collection);
-      ApiFuture<QuerySnapshot> query = null;
-
-      if (fields.length == 0) {
-        if (start == 0 && end == 0) {
-          query = colRef.get();
-        } else {
-          query = colRef.offset(start).limit(length).get();
-        }
-      } else {
-        if (start == 0 && end == 0) {
-          query = colRef.select(fields).get();
-        } else {
-          query = colRef.select(fields).offset(start).limit(length).get();
-        }
-      }
-      */
 
       QuerySnapshot querySnapshot = futureSnapshot.get();
       List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
@@ -133,15 +100,13 @@ public class FirestoreRecordReader extends RecordReader<Object, QueryDocumentSna
 
       items = documents;
 
-      LOG.info("documents={}", items.size());
+      LOG.debug("documents={}", items.size());
 
       iterator = items.iterator();
       itemIdx = 0;
     } catch (ExecutionException e) {
       LOG.error("Error in Reader", e);
     }
-
-    LOG.info("Exit Reader.initialize");
   }
 
   @Override

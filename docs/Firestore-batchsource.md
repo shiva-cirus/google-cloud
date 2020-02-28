@@ -45,6 +45,7 @@ Note, This applies only if Mode is set to `Basic`.
 
 **Filters**: Specify the custom filter for fetching documents from Firestore Collection. Supported operators are, 
 * EqualTo
+* NumericEqualTo
 * LessThan
 * LessThanOrEqualTo
 * GreaterThan

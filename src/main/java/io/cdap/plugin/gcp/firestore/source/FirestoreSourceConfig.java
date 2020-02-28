@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
-import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_CUSTOME_QUERY;
+import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_CUSTOM_QUERY;
 import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_ID_ALIAS;
 import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_INCLUDE_ID;
 import static io.cdap.plugin.gcp.firestore.source.util.FirestoreSourceConstants.PROPERTY_PULL_DOCUMENTS;
@@ -131,12 +131,12 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
   @Description("Specify the document ids to be skipped from Firestore Collection; for example: 'Doc1,Doc2'.")
   private String skipDocuments;
 
-  @Name(PROPERTY_CUSTOME_QUERY)
+  @Name(PROPERTY_CUSTOM_QUERY)
   @Macro
   @Nullable
   @Description("Specify the custom filter for fetching documents from Firestore Collection. " +
-    "Supported operators are, EqualTo, LessThan, LessThanOrEqualTo, GreaterThan, GreaterThanOrEqualTo. " +
-    "A filter must specify the operator with field it should filter on as well the value. " +
+    "Supported operators are, EqualTo, NumericEqualTo, LessThan, LessThanOrEqualTo, GreaterThan, " +
+    "GreaterThanOrEqualTo. A filter must specify the operator with field it should filter on as well the value. " +
     "Filters are specified using syntax: \"value:operator(field)[,value:operator(field)]\". " +
     "For example, 'CA:EqualTo(state),1000000:LessThan(population)' will apply two filters. " +
     "The first will create a filter as state = 'CA'." +
@@ -367,104 +367,6 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
   }
 
   /**
-   * Validates given input/output schema according the the specified supported types. Fields of types
-   * {@link Schema.Type#RECORD}, {@link Schema.Type#ARRAY}, {@link Schema.Type#MAP} will be validated recursively.
-   *
-   * @param schema                schema to validate.
-   * @param supportedLogicalTypes set of supported logical types.
-   * @param supportedTypes        set of supported types.
-   * @throws IllegalArgumentException in the case when schema is invalid.
-   */
-  /*
-  public void validateSchema(Schema schema, Set<Schema.LogicalType> supportedLogicalTypes,
-                             Set<Schema.Type> supportedTypes) {
-
-    Preconditions.checkNotNull(supportedLogicalTypes, "Supported logical types can not be null");
-    Preconditions.checkNotNull(supportedTypes, "Supported types can not be null");
-    if (schema == null) {
-      throw new IllegalArgumentException("Schema must be specified");
-    }
-    Schema nonNullableSchema = schema.isNullable() ? schema.getNonNullable() : schema;
-    validateRecordSchema(null, nonNullableSchema, supportedLogicalTypes, supportedTypes);
-  }
-
-  private void validateRecordSchema(@Nullable String fieldName, Schema schema,
-                                    Set<Schema.LogicalType> supportedLogicalTypes, Set<Schema.Type> supportedTypes) {
-    List<Schema.Field> fields = schema.getFields();
-    if (fields == null || fields.isEmpty()) {
-      throw new IllegalArgumentException("Schema must contain fields");
-    }
-    for (Schema.Field field : fields) {
-      // Use full field name for nested records to construct meaningful errors messages.
-      // Full field names will be in the following format: 'record_field_name.nested_record_field_name'
-      String fullFieldName = fieldName != null ? String.format("%s.%s", fieldName, field.getName()) :
-        field.getName();
-      validateFieldSchema(fullFieldName, field.getSchema(), supportedLogicalTypes, supportedTypes);
-    }
-  }
-
-  private void validateFieldSchema(String fieldName, Schema schema, Set<Schema.LogicalType> supportedLogicalTypes,
-                                   Set<Schema.Type> supportedTypes) {
-    Schema nonNullableSchema = schema.isNullable() ? schema.getNonNullable() : schema;
-    Schema.Type type = nonNullableSchema.getType();
-    switch (type) {
-      case RECORD:
-        validateRecordSchema(fieldName, nonNullableSchema, supportedLogicalTypes, supportedTypes);
-        break;
-      case ARRAY:
-        validateArraySchema(fieldName, nonNullableSchema, supportedLogicalTypes, supportedTypes);
-        break;
-      case MAP:
-        validateMapSchema(fieldName, nonNullableSchema, supportedLogicalTypes, supportedTypes);
-        break;
-      default:
-        validateSchemaType(fieldName, nonNullableSchema, supportedLogicalTypes, supportedTypes);
-    }
-  }
-
-  private void validateMapSchema(String fieldName, Schema schema, Set<Schema.LogicalType> supportedLogicalTypes,
-                                 Set<Schema.Type> supportedTypes) {
-    Schema keySchema = schema.getMapSchema().getKey();
-    if (keySchema.isNullable()) {
-      throw new IllegalArgumentException(String.format(
-        "Map keys must be a non-nullable string. Please change field '%s' to be a non-nullable string.",
-        fieldName));
-    }
-    if (keySchema.getType() != Schema.Type.STRING) {
-      throw new IllegalArgumentException(String.format(
-        "Map keys must be a non-nullable string. Please change field '%s' to be a non-nullable string.",
-        fieldName));
-    }
-    validateFieldSchema(fieldName, schema.getMapSchema().getValue(), supportedLogicalTypes, supportedTypes);
-  }
-
-  private void validateArraySchema(String fieldName, Schema schema, Set<Schema.LogicalType> supportedLogicalTypes,
-                                   Set<Schema.Type> supportedTypes) {
-    Schema componentSchema = schema.getComponentSchema().isNullable() ? schema.getComponentSchema().getNonNullable()
-      : schema.getComponentSchema();
-    validateFieldSchema(fieldName, componentSchema, supportedLogicalTypes, supportedTypes);
-  }
-
-  private void validateSchemaType(String fieldName, Schema fieldSchema, Set<Schema.LogicalType> supportedLogicalTypes,
-                                  Set<Schema.Type> supportedTypes) {
-    Schema.Type type = fieldSchema.getType();
-    Schema.LogicalType logicalType = fieldSchema.getLogicalType();
-    if (supportedTypes.contains(type) || supportedLogicalTypes.contains(logicalType)) {
-      return;
-    }
-
-    String supportedTypeNames = Stream.concat(supportedTypes.stream(), supportedLogicalTypes.stream())
-      .map(Enum::name)
-      .map(String::toLowerCase)
-      .collect(Collectors.joining(", "));
-
-    String actualTypeName = logicalType != null ? logicalType.name().toLowerCase() : type.name().toLowerCase();
-    throw new IllegalArgumentException(String.format("Field '%s' is of unsupported type '%s'. " +
-      "Supported types are: %s.", fieldName, actualTypeName, supportedTypeNames));
-  }
-  */
-
-  /**
    * Returns true if firestore can be connected to or schema is not a macro.
    */
   public boolean shouldConnect() {
@@ -515,7 +417,7 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
   }
 
   private void validateFilters(FailureCollector collector) {
-    if (containsMacro(PROPERTY_CUSTOME_QUERY)) {
+    if (containsMacro(PROPERTY_CUSTOM_QUERY)) {
       return;
     }
 
@@ -524,13 +426,13 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
 
     if (mode == SourceQueryMode.BASIC && !Strings.isNullOrEmpty(getFilters())) {
       collector.addFailure("In case of Mode=Basic, Filters must be empty", null)
-        .withConfigProperty(PROPERTY_CUSTOME_QUERY);
+        .withConfigProperty(PROPERTY_CUSTOM_QUERY);
     } else if (mode == SourceQueryMode.ADVANCED) {
       List<FilterInfo> filters = getFiltersAsList(collector);
       collector.getOrThrowException();
       if (filters.isEmpty()) {
         collector.addFailure("In case of Mode=Advanced, Filters must contain at least one filter", null)
-          .withConfigProperty(PROPERTY_CUSTOME_QUERY);
+          .withConfigProperty(PROPERTY_CUSTOM_QUERY);
         return;
       }
     }
@@ -549,7 +451,7 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
    * returned can never be empty.
    */
   public List<FilterInfo> getFiltersAsList(FailureCollector collector) {
-    if (containsMacro(PROPERTY_CUSTOME_QUERY)) {
+    if (containsMacro(PROPERTY_CUSTOM_QUERY)) {
       return Collections.emptyList();
     }
 
@@ -557,7 +459,7 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
       List<FilterInfo> filterInfos = FilterInfoParser.parseFilterString(filters);
       return filterInfos;
     } catch (Exception e) {
-      collector.addFailure(e.getMessage(), null).withConfigProperty(PROPERTY_CUSTOME_QUERY);
+      collector.addFailure(e.getMessage(), null).withConfigProperty(PROPERTY_CUSTOM_QUERY);
       return Collections.emptyList();
     }
   }

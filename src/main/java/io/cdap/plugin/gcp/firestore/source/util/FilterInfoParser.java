@@ -42,12 +42,6 @@ public class FilterInfoParser {
           "Could not find ':' separating filter value from its operation in '%s'.", filter));
       }
       String value = filter.substring(0, colonIdx).trim();
-      /*
-      if (!filterNames.add(name)) {
-        throw new IllegalArgumentException(String.format(
-          "Cannot create multiple aggregate functions with the same name '%s'.", name));
-      }
-      */
 
       String opertorAndField = filter.substring(colonIdx + 1).trim();
       int leftParanIdx = opertorAndField.indexOf('(');
@@ -74,11 +68,34 @@ public class FilterInfoParser {
       String field = opertorAndField.substring(leftParanIdx + 1, opertorAndField.length() - 1).trim();
       if (field.isEmpty()) {
         throw new IllegalArgumentException(String.format(
-          "Invalid operator '%s'. A field must be given as an argument.", opertorAndField));
+          "Invalid operation format '%s'. A field must be given as an argument.", opertorAndField));
       }
 
-      filterInfos.add(new FilterInfo(field, operator, value));
+      Object fieldValue = value;
+      if (operator != FilterOperator.EQUAL_TO) {
+        try {
+          fieldValue = getNumericValue(value);
+        } catch (NumberFormatException e) {
+          throw new IllegalArgumentException(String.format(
+            "Invalid value '%s' for operator '%s'. A numeric value expected for the operator used.", value,
+            operatorStr));
+        }
+      }
+
+      filterInfos.add(new FilterInfo(field, operator, fieldValue));
     }
     return filterInfos;
+  }
+
+  private static Number getNumericValue(String value) throws NumberFormatException {
+    Number number = null;
+
+    if (value.indexOf(".") >= 0) {
+      number = Double.valueOf(value);
+    } else {
+      number = Long.valueOf(value);
+    }
+
+    return number;
   }
 }

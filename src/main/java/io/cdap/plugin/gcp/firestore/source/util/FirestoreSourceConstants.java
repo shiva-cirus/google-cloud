@@ -57,7 +57,7 @@ public interface FirestoreSourceConstants {
   String PROPERTY_SKIP_DOCUMENTS = "skipDocumentList";
 
   /**
-   * Configuration property name used to specify the comma-separated list of document ids to pull.
+   * Configuration property name used to specify the comma-separated list of filters.
    */
-  String PROPERTY_CUSTOME_QUERY = "customQuery";
+  String PROPERTY_CUSTOM_QUERY = "customQuery";
 }

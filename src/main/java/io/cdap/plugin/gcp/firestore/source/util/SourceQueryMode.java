@@ -54,7 +54,8 @@ public enum SourceQueryMode {
   }
 
   public static String getSupportedModes() {
-    return Arrays.stream(SourceQueryMode.values()).map(SourceQueryMode::getValue).collect(Collectors.joining(", "));
+    return Arrays.stream(SourceQueryMode.values()).map(SourceQueryMode::getValue)
+      .collect(Collectors.joining(", "));
   }
 
   public String getValue() {

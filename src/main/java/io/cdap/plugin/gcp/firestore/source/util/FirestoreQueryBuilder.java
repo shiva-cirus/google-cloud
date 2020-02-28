@@ -49,6 +49,7 @@ public class FirestoreQueryBuilder {
       for (FilterInfo filter : filters) {
         switch (filter.getOperator()) {
           case EQUAL_TO:
+          case NUMERIC_EQUAL_TO:
             query = query.whereEqualTo(filter.getField(), filter.getValue());
             break;
           case LESS_THAN:

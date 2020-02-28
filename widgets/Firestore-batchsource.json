@@ -63,6 +63,7 @@
             },
             "dropdownOptions": [
               "EqualTo",
+              "NumericEqualTo",
               "LessThan",
               "LessThanOrEqualTo",
               "GreaterThan",

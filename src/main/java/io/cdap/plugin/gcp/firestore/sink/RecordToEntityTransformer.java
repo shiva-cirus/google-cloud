@@ -112,19 +112,6 @@ public class RecordToEntityTransformer {
     }
   }
 
-  /*
-  private String convertToValueOld(String fieldName, Schema fieldSchema, StructuredRecord record) {
-    if (record.get(fieldName) == null) {
-      return "";
-    }
-
-    Schema.Type fieldType = fieldSchema.getType();
-    String stringValue = getValue(record::get, fieldName, fieldType.toString(), String.class);
-
-    return stringValue;
-  }
-  */
-
   private <T> T getValue(Function<String, T> valueExtractor, String fieldName, String fieldType, Class<T> clazz) {
     T value = valueExtractor.apply(fieldName);
     if (clazz.isAssignableFrom(value.getClass())) {

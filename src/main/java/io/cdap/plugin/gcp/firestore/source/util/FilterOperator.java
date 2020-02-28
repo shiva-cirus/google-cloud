@@ -26,27 +26,32 @@ import java.util.stream.Stream;
 public enum FilterOperator {
 
   /**
-   * Operator will be used to perform "equal to" operation
+   * Operator will be used to perform "equal to" operation on string values
    */
   EQUAL_TO("EqualTo"),
 
   /**
-   * Operator will be used to perform "less than" operation
+   * Operator will be used to perform "equal to" operation on numeric values
+   */
+  NUMERIC_EQUAL_TO("NumericEqualTo"),
+
+  /**
+   * Operator will be used to perform "less than" operation on numeric values
    */
   LESS_THAN("LessThan"),
 
   /**
-   * Operator will be used to perform "less than or equal to" operation
+   * Operator will be used to perform "less than or equal to" operation on numeric values
    */
   LESS_THAN_OR_EQUAL_TO("LessThanOrEqualTo"),
 
   /**
-   * Operator will be used to perform "greater than" operation
+   * Operator will be used to perform "greater than" operation on numeric values
    */
   GREATER_THAN("GreaterThan"),
 
   /**
-   * Operator will be used to perform "greater than or equal to" operation
+   * Operator will be used to perform "greater than or equal to" operation on numeric values
    */
   GREATER_THAN_OR_EQUAL_TO("GreaterThanOrEqualTo");
 
