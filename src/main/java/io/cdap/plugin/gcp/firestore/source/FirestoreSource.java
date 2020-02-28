@@ -144,7 +144,7 @@ public class FirestoreSource extends BatchSource<Object, QueryDocumentSnapshot, 
     //String splits = String.valueOf(config.getNumSplits());
     String mode = config.getQueryMode(collector).getValue();
     String pullDocuments = config.getPullDocuments();
-    String skipDocuments = config.getPullDocuments();
+    String skipDocuments = config.getSkipDocuments();
     String filters = config.getFilters();
 
     List<String> fields = fetchSchemaFields(config.getSchema(collector));

@@ -37,7 +37,7 @@
           "label": "Document Id Alias",
           "name": "idAlias",
           "widget-attributes" : {
-            "placeholder": "Key alias"
+            "placeholder": "Id alias"
           }
         }
       ]
