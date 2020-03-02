@@ -19,7 +19,6 @@ package io.cdap.plugin.gcp.firestore.sink;
 import com.google.cloud.firestore.Firestore;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import io.cdap.cdap.api.annotation.Description;
 import io.cdap.cdap.api.annotation.Macro;
 import io.cdap.cdap.api.annotation.Name;
@@ -29,6 +28,7 @@ import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.gcp.common.GCPReferenceSinkConfig;
 import io.cdap.plugin.gcp.firestore.sink.util.SinkIdType;
 import io.cdap.plugin.gcp.firestore.util.FirestoreUtil;
+import io.cdap.plugin.gcp.firestore.util.Util;
 
 import java.util.List;
 import java.util.Optional;
@@ -127,7 +127,7 @@ public class FirestoreSinkConfig extends GCPReferenceSinkConfig {
 
   @Nullable
   public String getIdAlias() {
-    return Strings.isNullOrEmpty(idAlias) ? ID_PROPERTY_NAME : idAlias;
+    return Util.isNullOrEmpty(idAlias) ? ID_PROPERTY_NAME : idAlias;
   }
 
   public int getBatchSize() {

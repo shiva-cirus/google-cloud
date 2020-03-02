@@ -19,7 +19,6 @@ package io.cdap.plugin.gcp.firestore.source;
 import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import io.cdap.cdap.api.annotation.Description;
@@ -29,10 +28,12 @@ import io.cdap.cdap.api.data.schema.Schema;
 import io.cdap.cdap.api.plugin.PluginConfig;
 import io.cdap.cdap.etl.api.FailureCollector;
 import io.cdap.plugin.gcp.common.GCPReferenceSourceConfig;
+import io.cdap.plugin.gcp.firestore.exception.FirestoreInitializationException;
 import io.cdap.plugin.gcp.firestore.source.util.FilterInfo;
 import io.cdap.plugin.gcp.firestore.source.util.FilterInfoParser;
 import io.cdap.plugin.gcp.firestore.source.util.SourceQueryMode;
 import io.cdap.plugin.gcp.firestore.util.FirestoreUtil;
+import io.cdap.plugin.gcp.firestore.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -213,7 +214,7 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
   }
 
   public Schema getSchema(FailureCollector collector) {
-    if (Strings.isNullOrEmpty(schema)) {
+    if (Util.isNullOrEmpty(schema)) {
       return null;
     }
     try {
@@ -257,15 +258,21 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
       db = FirestoreUtil.getFirestore(getServiceAccountFilePath(), getProject(), getDatabase());
 
       if (db != null) {
-        checkCollectionExists(db, collector);
+        //checkCollectionExists(db);
         db.close();
       }
-    } catch (Exception e) {
+    } catch (FirestoreInitializationException e) {
       collector.addFailure(e.getMessage(), "Ensure properties like project, service account " +
         "file path are correct.")
         .withConfigProperty(NAME_SERVICE_ACCOUNT_FILE_PATH)
         .withConfigProperty(NAME_PROJECT)
         .withStacktrace(e.getStackTrace());
+    } catch (IllegalArgumentException e) {
+      collector.addFailure(e.getMessage(), "Ensure collection name exists in Firestore.")
+        .withConfigProperty(PROPERTY_COLLECTION)
+        .withStacktrace(e.getStackTrace());
+    } catch (Exception e) {
+      LOG.error("Error", e);
     }
   }
 
@@ -274,24 +281,24 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
       return;
     }
 
-    if (Strings.isNullOrEmpty(getCollection())) {
+    if (Util.isNullOrEmpty(getCollection())) {
       collector.addFailure("Collection must be specified.", null)
         .withConfigProperty(PROPERTY_COLLECTION);
     }
   }
 
-  private void checkCollectionExists(Firestore db, FailureCollector collector) {
+  private void checkCollectionExists(Firestore db) throws IllegalArgumentException {
     if (containsMacro(PROPERTY_COLLECTION)) {
       return;
     }
 
+    String collectionName = Strings.nullToEmpty(getCollection()).trim();
+
     List<String> collections = StreamSupport.stream(db.listCollections().spliterator(), false)
       .map(CollectionReference::getId).collect(Collectors.toList());
-    if (!collections.contains(getCollection())) {
-      collector.addFailure("Invalid collection", null).withConfigProperty(PROPERTY_COLLECTION);
+    if (!collections.contains(collectionName)) {
+      throw new IllegalArgumentException("Invalid collection");
     }
-
-    collector.getOrThrowException();
   }
 
   private void validateSchema(Schema schema, FailureCollector collector) {
@@ -397,8 +404,8 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
 
     SourceQueryMode mode = getQueryMode(collector);
 
-    List<String> pullDocumentList = splitToList(getPullDocuments(), ',');
-    List<String> skipDocumentList = splitToList(getSkipDocuments(), ',');
+    List<String> pullDocumentList = Util.splitToList(getPullDocuments(), ',');
+    List<String> skipDocumentList = Util.splitToList(getSkipDocuments(), ',');
 
     if (mode == SourceQueryMode.BASIC) {
       if (!pullDocumentList.isEmpty() && !skipDocumentList.isEmpty()) {
@@ -424,7 +431,7 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
     //2020:Less Than(born)
     SourceQueryMode mode = getQueryMode(collector);
 
-    if (mode == SourceQueryMode.BASIC && !Strings.isNullOrEmpty(getFilters())) {
+    if (mode == SourceQueryMode.BASIC && !Util.isNullOrEmpty(getFilters())) {
       collector.addFailure("In case of Mode=Basic, Filters must be empty", null)
         .withConfigProperty(PROPERTY_CUSTOM_QUERY);
     } else if (mode == SourceQueryMode.ADVANCED) {
@@ -436,14 +443,6 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
         return;
       }
     }
-  }
-
-  private List<String> splitToList(String value, char delimiter) {
-    if (Strings.isNullOrEmpty(value)) {
-      return Collections.emptyList();
-    }
-
-    return Splitter.on(delimiter).trimResults().splitToList(value);
   }
 
   /**
