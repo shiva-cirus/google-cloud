@@ -17,6 +17,7 @@
 package io.cdap.plugin.gcp.firestore.source.util;
 
 import com.google.common.base.Splitter;
+import io.cdap.plugin.gcp.firestore.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,10 @@ public class FilterInfoParser {
    */
   public static List<FilterInfo> parseFilterString(String filterString) throws IllegalArgumentException {
     List<FilterInfo> filterInfos = new ArrayList<>();
+
+    if (Util.isNullOrEmpty(filterString)) {
+      return filterInfos;
+    }
 
     //List<String> filterNames = new ArrayList<>();
     for (String filter : Splitter.on(',').trimResults().split(filterString)) {

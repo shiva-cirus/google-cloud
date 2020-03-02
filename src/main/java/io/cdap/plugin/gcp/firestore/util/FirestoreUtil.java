@@ -18,7 +18,6 @@ package io.cdap.plugin.gcp.firestore.util;
 
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.FirestoreOptions;
-import com.google.common.base.Strings;
 import io.cdap.plugin.gcp.common.GCPUtils;
 import io.cdap.plugin.gcp.firestore.exception.FirestoreInitializationException;
 import org.slf4j.Logger;
@@ -47,13 +46,13 @@ public class FirestoreUtil {
       FirestoreOptions.Builder optionsBuilder = FirestoreOptions.newBuilder()
         .setProjectId(projectId);
 
-      LOG.error("serviceAccount={}, project={}, db={}...", serviceAccountFilePath, projectId, databaseId);
+      LOG.debug("serviceAccount={}, project={}, db={}...", serviceAccountFilePath, projectId, databaseId);
 
-      if (!Strings.isNullOrEmpty(serviceAccountFilePath)) {
+      if (!Util.isNullOrEmpty(serviceAccountFilePath)) {
         optionsBuilder.setCredentials(GCPUtils.loadServiceAccountCredentials(serviceAccountFilePath));
       }
 
-      if (!Strings.isNullOrEmpty(databaseId)) {
+      if (!Util.isNullOrEmpty(databaseId)) {
         optionsBuilder.setDatabaseId(databaseId);
       }
 

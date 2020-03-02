@@ -17,9 +17,9 @@
 package io.cdap.plugin.gcp.firestore.source;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import io.cdap.cdap.api.data.batch.InputFormatProvider;
+import io.cdap.plugin.gcp.firestore.util.Util;
 
 import java.util.List;
 import java.util.Map;
@@ -47,12 +47,12 @@ public class FirestoreInputFormatProvider implements InputFormatProvider {
                                       List<String> fields) {
     ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
       .put(NAME_PROJECT, project)
-      .put(PROPERTY_DATABASE_ID, Strings.isNullOrEmpty(databaseId) ? "" : databaseId)
-      .put(PROPERTY_COLLECTION, Strings.isNullOrEmpty(collection) ? "" : collection)
+      .put(PROPERTY_DATABASE_ID, Util.isNullOrEmpty(databaseId) ? "" : databaseId)
+      .put(PROPERTY_COLLECTION, Util.isNullOrEmpty(collection) ? "" : collection)
       .put(PROPERTY_QUERY_MODE, mode)
-      .put(PROPERTY_PULL_DOCUMENTS, Strings.isNullOrEmpty(pullDocuments) ? "" : pullDocuments)
-      .put(PROPERTY_SKIP_DOCUMENTS, Strings.isNullOrEmpty(skipDocuments) ? "" : skipDocuments)
-      .put(PROPERTY_CUSTOM_QUERY, Strings.isNullOrEmpty(filters) ? "" : filters)
+      .put(PROPERTY_PULL_DOCUMENTS, Util.isNullOrEmpty(pullDocuments) ? "" : pullDocuments)
+      .put(PROPERTY_SKIP_DOCUMENTS, Util.isNullOrEmpty(skipDocuments) ? "" : skipDocuments)
+      .put(PROPERTY_CUSTOM_QUERY, Util.isNullOrEmpty(filters) ? "" : filters)
       .put(PROPERTY_SCHEMA, Joiner.on(",").join(fields));
     if (Objects.nonNull(serviceAccountPath)) {
       builder.put(NAME_SERVICE_ACCOUNT_FILE_PATH, serviceAccountPath);

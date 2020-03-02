@@ -21,12 +21,11 @@ import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.Query;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import io.cdap.plugin.gcp.firestore.source.util.FilterInfo;
 import io.cdap.plugin.gcp.firestore.source.util.FilterInfoParser;
 import io.cdap.plugin.gcp.firestore.source.util.FirestoreQueryBuilder;
 import io.cdap.plugin.gcp.firestore.util.FirestoreUtil;
+import io.cdap.plugin.gcp.firestore.util.Util;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -75,9 +74,9 @@ public class FirestoreRecordReader extends RecordReader<Object, QueryDocumentSna
     String databaseId = conf.get(PROPERTY_DATABASE_ID);
     String serviceAccountFilePath = conf.get(NAME_SERVICE_ACCOUNT_FILE_PATH);
     String collection = conf.get(PROPERTY_COLLECTION);
-    List<String> fields = splitToList(conf.get(PROPERTY_SCHEMA, ""), ',');
-    List<String> pullDocuments = splitToList(conf.get(PROPERTY_PULL_DOCUMENTS, ""), ',');
-    List<String> skipDocuments = splitToList(conf.get(PROPERTY_SKIP_DOCUMENTS, ""), ',');
+    List<String> fields = Util.splitToList(conf.get(PROPERTY_SCHEMA, ""), ',');
+    List<String> pullDocuments = Util.splitToList(conf.get(PROPERTY_PULL_DOCUMENTS, ""), ',');
+    List<String> skipDocuments = Util.splitToList(conf.get(PROPERTY_SKIP_DOCUMENTS, ""), ',');
     String customQuery = conf.get(PROPERTY_CUSTOM_QUERY, "");
 
     db = FirestoreUtil.getFirestore(serviceAccountFilePath, projectId, databaseId);
@@ -106,6 +105,7 @@ public class FirestoreRecordReader extends RecordReader<Object, QueryDocumentSna
       itemIdx = 0;
     } catch (ExecutionException e) {
       LOG.error("Error in Reader", e);
+      throw new InterruptedException(e.getMessage());
     }
   }
 
@@ -149,13 +149,5 @@ public class FirestoreRecordReader extends RecordReader<Object, QueryDocumentSna
       LOG.warn("Failed while parsing the filter string", e);
     }
     return filters;
-  }
-
-  private List<String> splitToList(String value, char delimiter) {
-    if (Strings.isNullOrEmpty(value)) {
-      return Collections.emptyList();
-    }
-
-    return Splitter.on(delimiter).trimResults().splitToList(value);
   }
 }
