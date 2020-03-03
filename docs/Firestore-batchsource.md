@@ -3,7 +3,7 @@
 Description
 -----------
 Reads documents from a Firestore collection and converts each document into a StructuredRecord with the help
-of a specified schema. The user can optionally provide an input query to filter documents from firestore.
+of a specified schema. The user can optionally provide an input query to filter documents from Firestore.
 
 Credentials
 -----------
@@ -29,7 +29,7 @@ When running on other clusters, the file must be present on every node in the cl
 
 **Database Id**: Firestore database name. If no value is provided, the `(default)` database will be used.
 
-**Collection Name**: Name of the firestore collection to read data from.
+**Collection Name**: Name of the Firestore collection to read data from.
 
 **Mode**: Mode of query. The mode can be one of two values: 
 

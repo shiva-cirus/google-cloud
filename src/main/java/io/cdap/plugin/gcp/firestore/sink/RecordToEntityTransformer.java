@@ -57,11 +57,13 @@ public class RecordToEntityTransformer {
     for (Schema.Field field : fields) {
       String fieldName = field.getName();
       Object fieldValue = convertToValue(fieldName, field.getSchema(), record);
+      /*
       if (fieldValue == null) {
         continue;
       }
+      */
 
-      LOG.info("fieldName: {}, fieldValue={}", fieldName, fieldValue);
+      LOG.debug("fieldName: {}, fieldValue={}", fieldName, fieldValue);
 
       if (idType == CUSTOM_NAME && fieldName.equals(idAlias)) {
         data.put(ID_PROPERTY_NAME, fieldValue);
@@ -106,6 +108,13 @@ public class RecordToEntityTransformer {
       case BOOLEAN:
         Boolean booleanValue = getValue(record::get, fieldName, fieldType.toString(), Boolean.class);
         return booleanValue;
+      case UNION:
+        if (fieldSchema.isNullable()) {
+          return convertToValue(fieldName, fieldSchema.getNonNullable(), record);
+        }
+        throw new IllegalStateException(
+          String.format("Field '%s' is of unexpected type '%s'. Declared 'complex UNION' types: %s",
+            fieldName, record.get(fieldName).getClass().getSimpleName(), fieldSchema.getUnionSchemas()));
       default:
         throw new IllegalStateException(
           String.format("Record type '%s' is not supported for field '%s'", fieldType.name(), fieldName));

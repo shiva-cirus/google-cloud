@@ -374,7 +374,7 @@ private static final Map<ValueType, Schema> SUPPORTED_SIMPLE_TYPES = new Immutab
   }
 
   /**
-   * Returns true if firestore can be connected to or schema is not a macro.
+   * Returns true if Firestore can be connected to or schema is not a macro.
    */
   public boolean shouldConnect() {
     return !containsMacro(PROPERTY_SCHEMA) &&

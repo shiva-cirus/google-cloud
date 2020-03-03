@@ -214,24 +214,6 @@ public class FirestoreSinkConfig extends GCPReferenceSinkConfig {
       case LONG:
       case NULL:
         return;
-      case RECORD:
-        validateSchema(fieldSchema, collector);
-        return;
-      case ARRAY:
-        if (fieldSchema.getComponentSchema() == null) {
-          collector.addFailure(String.format("Field '%s' has no schema for array type", fieldName),
-            "Ensure array component has schema.").withInputSchemaField(fieldName);
-          return;
-        }
-        Schema componentSchema = fieldSchema.getComponentSchema();
-        if (Schema.Type.ARRAY == componentSchema.getType()) {
-          collector.addFailure(String.format("Field '%s' is of unsupported type array of array.", fieldName),
-            "Ensure the field has valid type.")
-            .withInputSchemaField(fieldName);
-          return;
-        }
-        validateSinkFieldSchema(fieldName, componentSchema, collector);
-        return;
       case UNION:
         fieldSchema.getUnionSchemas().forEach(unionSchema ->
           validateSinkFieldSchema(fieldName, unionSchema, collector));
@@ -239,106 +221,9 @@ public class FirestoreSinkConfig extends GCPReferenceSinkConfig {
       default:
         collector.addFailure(String.format("Field '%s' is of unsupported type '%s'",
           fieldName, fieldSchema.getDisplayName()),
-          "Supported types are: string, double, boolean, bytes, long, record, " +
-            "array, union and timestamp.")
+          "Supported types are: string, double, boolean and long")
           .withInputSchemaField(fieldName);
     }
-  }
-
-  /**
-   * Validates given input/output schema according the the specified supported types. Fields of types
-   * {@link Schema.Type#RECORD}, {@link Schema.Type#ARRAY}, {@link Schema.Type#MAP} will be validated recursively.
-   *
-   * @param schema                schema to validate.
-   * @param supportedLogicalTypes set of supported logical types.
-   * @param supportedTypes        set of supported types.
-   * @throws IllegalArgumentException in the case when schema is invalid.
-   */
-  public void validateSchema(Schema schema, Set<Schema.LogicalType> supportedLogicalTypes,
-                             Set<Schema.Type> supportedTypes) {
-
-    Preconditions.checkNotNull(supportedLogicalTypes, "Supported logical types can not be null");
-    Preconditions.checkNotNull(supportedTypes, "Supported types can not be null");
-    if (schema == null) {
-      throw new IllegalArgumentException("Schema must be specified");
-    }
-    Schema nonNullableSchema = schema.isNullable() ? schema.getNonNullable() : schema;
-    validateRecordSchema(null, nonNullableSchema, supportedLogicalTypes, supportedTypes);
-  }
-
-  private void validateRecordSchema(@Nullable String fieldName, Schema schema,
-                                    Set<Schema.LogicalType> supportedLogicalTypes, Set<Schema.Type> supportedTypes) {
-    List<Schema.Field> fields = schema.getFields();
-    if (fields == null || fields.isEmpty()) {
-      throw new IllegalArgumentException("Schema must contain fields");
-    }
-    for (Schema.Field field : fields) {
-      // Use full field name for nested records to construct meaningful errors messages.
-      // Full field names will be in the following format: 'record_field_name.nested_record_field_name'
-      String fullFieldName = fieldName != null ? String.format("%s.%s", fieldName, field.getName()) :
-        field.getName();
-      validateFieldSchema(fullFieldName, field.getSchema(), supportedLogicalTypes, supportedTypes);
-    }
-  }
-
-  private void validateFieldSchema(String fieldName, Schema schema, Set<Schema.LogicalType> supportedLogicalTypes,
-                                   Set<Schema.Type> supportedTypes) {
-    Schema nonNullableSchema = schema.isNullable() ? schema.getNonNullable() : schema;
-    Schema.Type type = nonNullableSchema.getType();
-    switch (type) {
-      case RECORD:
-        validateRecordSchema(fieldName, nonNullableSchema, supportedLogicalTypes, supportedTypes);
-        break;
-      case ARRAY:
-        validateArraySchema(fieldName, nonNullableSchema, supportedLogicalTypes, supportedTypes);
-        break;
-      case MAP:
-        validateMapSchema(fieldName, nonNullableSchema, supportedLogicalTypes, supportedTypes);
-        break;
-      default:
-        validateSchemaType(fieldName, nonNullableSchema, supportedLogicalTypes, supportedTypes);
-    }
-  }
-
-  private void validateMapSchema(String fieldName, Schema schema, Set<Schema.LogicalType> supportedLogicalTypes,
-                                 Set<Schema.Type> supportedTypes) {
-    Schema keySchema = schema.getMapSchema().getKey();
-    if (keySchema.isNullable()) {
-      throw new IllegalArgumentException(String.format(
-        "Map keys must be a non-nullable string. Please change field '%s' to be a non-nullable string.",
-        fieldName));
-    }
-    if (keySchema.getType() != Schema.Type.STRING) {
-      throw new IllegalArgumentException(String.format(
-        "Map keys must be a non-nullable string. Please change field '%s' to be a non-nullable string.",
-        fieldName));
-    }
-    validateFieldSchema(fieldName, schema.getMapSchema().getValue(), supportedLogicalTypes, supportedTypes);
-  }
-
-  private void validateArraySchema(String fieldName, Schema schema, Set<Schema.LogicalType> supportedLogicalTypes,
-                                   Set<Schema.Type> supportedTypes) {
-    Schema componentSchema = schema.getComponentSchema().isNullable() ? schema.getComponentSchema().getNonNullable()
-      : schema.getComponentSchema();
-    validateFieldSchema(fieldName, componentSchema, supportedLogicalTypes, supportedTypes);
-  }
-
-  private void validateSchemaType(String fieldName, Schema fieldSchema, Set<Schema.LogicalType> supportedLogicalTypes,
-                                  Set<Schema.Type> supportedTypes) {
-    Schema.Type type = fieldSchema.getType();
-    Schema.LogicalType logicalType = fieldSchema.getLogicalType();
-    if (supportedTypes.contains(type) || supportedLogicalTypes.contains(logicalType)) {
-      return;
-    }
-
-    String supportedTypeNames = Stream.concat(supportedTypes.stream(), supportedLogicalTypes.stream())
-      .map(Enum::name)
-      .map(String::toLowerCase)
-      .collect(Collectors.joining(", "));
-
-    String actualTypeName = logicalType != null ? logicalType.name().toLowerCase() : type.name().toLowerCase();
-    throw new IllegalArgumentException(String.format("Field '%s' is of unsupported type '%s'. " +
-      "Supported types are: %s.", fieldName, actualTypeName, supportedTypeNames));
   }
 
   /**
@@ -384,7 +269,7 @@ public class FirestoreSinkConfig extends GCPReferenceSinkConfig {
   }
 
   /**
-   * Returns true if firestore can be connected to or schema is not a macro.
+   * Returns true if Firestore can be connected to or schema is not a macro.
    */
   private boolean shouldConnect() {
     return !containsMacro(NAME_SERVICE_ACCOUNT_FILE_PATH) &&
