@@ -122,11 +122,13 @@
   </repositories>
 
   <dependencies>
+    <!--
     <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
       <version>${avro.version}</version>
     </dependency>
+    -->
     <dependency>
       <groupId>io.cdap.cdap</groupId>
       <artifactId>cdap-formats</artifactId>
@@ -182,12 +184,13 @@
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>
     </dependency>
+    <!--
     <dependency>
       <groupId>com.google.cloud.bigdataoss</groupId>
       <artifactId>bigquery-connector</artifactId>
       <version>${bigquery.connector.hadoop2.version}</version>
       <exclusions>
-        <!-- Dependencies are excluded because they are missing in central Maven repository -->
+
         <exclusion>
           <groupId>com.sun.jmx</groupId>
           <artifactId>jmxri</artifactId>
@@ -217,31 +220,27 @@
         </exclusion>
       </exclusions>
     </dependency>
+    -->
+    <!--
     <dependency>
-      <!--
-        Required by bigtable-hbase-1.x-mapreduce instead of excluded non-shaded version.
-        Shaded library is used to avoid dependency conflicts with Datastore module on profobuf-java dependency.
-        Bigtable requires version 2.x and Datastore module requires 3.x protocol.
-      -->
+
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-shaded-client</artifactId>
       <version>${hbase-shaded-client.version}</version>
     </dependency>
     <dependency>
-      <!--
-        Required by bigtable-hbase-1.x-mapreduce instead of excluded non-shaded version.
-        Shaded library is used to avoid dependency conflicts with Datastore module on profobuf-java dependency.
-        Bigtable requires version 2.x and Datastore module requires 3.x protocol.
-      -->
+
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-shaded-server</artifactId>
       <version>${hbase-shaded-server.version}</version>
     </dependency>
+    -->
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-core</artifactId>
       <version>${dropwizard.metrics-core.version}</version>
     </dependency>
+    <!--
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigquery</artifactId>
@@ -257,6 +256,7 @@
       <artifactId>google-cloud-datastore</artifactId>
       <version>${google.cloud.datastore.version}</version>
     </dependency>
+    -->
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-firestore</artifactId>
@@ -358,6 +358,7 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <!--
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-speech</artifactId>
@@ -389,6 +390,7 @@
       <classifier>hadoop2</classifier>
       <version>${avro.version}</version>
     </dependency>
+    -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
@@ -432,6 +434,7 @@
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
     </dependency>
+    <!--
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-streaming_2.11</artifactId>
@@ -487,12 +490,15 @@
       <artifactId>snappy-java</artifactId>
       <version>1.1.7.2</version>
     </dependency>
+    -->
     <!-- Start: dependency for Google PubSub Streaming Source -->
+    <!--
     <dependency>
       <groupId>org.apache.bahir</groupId>
       <artifactId>spark-streaming-pubsub_2.11</artifactId>
       <version>2.3.3</version>
     </dependency>
+    -->
     <!-- End: dependency for Google PubSub Streaming Source -->
     
     <dependency>
@@ -502,6 +508,7 @@
       <scope>test</scope>
     </dependency>
     <!-- Dependencies are required after updating bigquery.connector version from 0.13.1-hadoop2 to hadoop2-0.13.17 -->
+    <!--
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
@@ -517,6 +524,7 @@
       <artifactId>httpclient</artifactId>
       <version>${httpclient.version}</version>
     </dependency>
+    -->
 
   </dependencies>
 

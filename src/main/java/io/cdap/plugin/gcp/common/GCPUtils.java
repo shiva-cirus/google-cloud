@@ -16,17 +16,18 @@
 
 package io.cdap.plugin.gcp.common;
 
-import com.google.auth.Credentials;
+//import com.google.auth.Credentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
+/*
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
-//import io.cdap.plugin.gcp.gcs.GCSPath;
-//import io.cdap.plugin.gcp.gcs.sink.GCSBatchSink.GCSBatchSinkConfig;
-
+import io.cdap.plugin.gcp.gcs.GCSPath;
+import io.cdap.plugin.gcp.gcs.sink.GCSBatchSink.GCSBatchSinkConfig;
+*/
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
