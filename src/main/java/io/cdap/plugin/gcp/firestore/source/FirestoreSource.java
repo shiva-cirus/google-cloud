@@ -122,8 +122,9 @@ public class FirestoreSource extends BatchSource<Object, QueryDocumentSnapshot, 
       return;
     }
 
-    Schema schema = getSchema(collector);
+
     if (configuredSchema == null) {
+      Schema schema = getSchema(collector);
       stageConfigurer.setOutputSchema(schema);
       return;
     }

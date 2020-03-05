@@ -24,8 +24,8 @@ import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
-import io.cdap.plugin.gcp.gcs.GCSPath;
-import io.cdap.plugin.gcp.gcs.sink.GCSBatchSink.GCSBatchSinkConfig;
+//import io.cdap.plugin.gcp.gcs.GCSPath;
+//import io.cdap.plugin.gcp.gcs.sink.GCSBatchSink.GCSBatchSinkConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,7 +46,7 @@ public class GCPUtils {
       return ServiceAccountCredentials.fromStream(serviceAccountStream);
     }
   }
-
+/*
   public static Map<String, String> getFileSystemProperties(GCSBatchSinkConfig config) {
     Map<String, String> properties = new HashMap<>();
     String serviceAccountFilePath = config.getServiceAccountFilePath();
@@ -91,4 +91,5 @@ public class GCPUtils {
     }
     storage.create(builder.build());
   }
+  */
 }
